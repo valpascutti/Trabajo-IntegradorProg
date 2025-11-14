@@ -1,0 +1,8 @@
+# No subir credenciales  
+db.properties
+*.properties
+
+# Archivos de configuración sensibles
+**/db.properties
+**/database.properties
+**/config.properties
