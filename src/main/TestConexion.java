@@ -20,10 +20,10 @@ public class TestConexion {
             }
         } catch (SQLException e) {
             System.err.println("Error de SQL: " + e.getMessage());
-            e.printStackTrace();
+           // e.printStackTrace();
         } catch (Exception e) {
             System.err.println("Error general: " + e.getMessage());
-            e.printStackTrace();
+           // e.printStackTrace();
         }
     }
 }
