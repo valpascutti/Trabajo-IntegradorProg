@@ -1,0 +1,3 @@
+DB_URL=jdbc:mysql://localhost:3306/gestion_productos_tpi?serverTimezone=UTC
+DB_USER=root
+DB_PASSWORD=Valen2024!
