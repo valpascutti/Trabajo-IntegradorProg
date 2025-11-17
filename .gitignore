@@ -6,3 +6,7 @@ db.properties
 **/db.properties
 **/database.properties
 **/config.properties
+
+bin/
+*.class
+
