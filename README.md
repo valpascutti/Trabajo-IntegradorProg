@@ -149,8 +149,9 @@ Al iniciar verás opciones para:
 ## Equipo de desarrollo
 - Valentina Pascutti
 - Angela Ramos
+- Nazareno Malpassi
 
-## Materia: Programación II  
-## Institución: Universidad Tecnológica Nacional (UTN)  
-## Año: 2025
+**Materia:** Programación II  
+**Institución:** Universidad Tecnológica Nacional (UTN)  
+**Año:** 2025
 
