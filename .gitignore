@@ -1,8 +1,16 @@
-# No subir credenciales  
+# Credenciales de base de datos - NUNCA subir
 db.properties
-*.properties
-
-# Archivos de configuración sensibles
 **/db.properties
-**/database.properties
-**/config.properties
+
+# Compilación Java
+bin/
+*.class
+
+# Archivos temporales
+*.tmp
+*.temp
+Thumbs.db
+
+# Logs
+*.log
+logs/
