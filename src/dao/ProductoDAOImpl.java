@@ -1,194 +1,119 @@
 package dao;
 
-import config.ConexionDB;
 import entities.Producto;
 import entities.CodigoBarras;
 import entities.TipoCodigo;
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
-public class ProductoDAOImpl implements ProductoDAO {
+public class ProductoDAOImpl extends BaseDAO<Producto> implements ProductoDAO {
+
+    // Queries SQL como constantes para facilitar mantenimiento
+    private static final String SELECT_BASE = 
+        "SELECT p.*, c.id AS cid, c.valor, c.tipo, c.observaciones " +
+        "FROM producto p LEFT JOIN codigo_barras c ON p.id_codigo_barras = c.id " +
+        "WHERE p.eliminado = false";
+    
+    private static final String INSERT_SQL = 
+        "INSERT INTO producto (nombre, marca, categoria, precio, peso, id_codigo_barras, eliminado) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
+    private static final String UPDATE_SQL = 
+        "UPDATE producto SET nombre=?, marca=?, categoria=?, precio=?, peso=?, id_codigo_barras=? WHERE id=?";
+    
+    private static final String DELETE_SQL = 
+        "UPDATE producto SET eliminado = true WHERE id = ?";
 
     @Override
     public void insertar(Producto producto) {
-        String sql = "INSERT INTO producto (nombre, marca, categoria, precio, peso, id_codigo_barras, eliminado) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, producto.getNombre());
-            ps.setString(2, producto.getMarca());
-            ps.setString(3, producto.getCategoria());
-            ps.setDouble(4, producto.getPrecio());
-            if (producto.getPeso() != null) {
-                ps.setDouble(5, producto.getPeso());
-            } else {
-                ps.setNull(5, Types.DOUBLE);
-            }
-            ps.setLong(6, producto.getCodigoBarras().getId());
-            ps.setBoolean(7, producto.getEliminado());
-
-            ps.executeUpdate();
-
-            // Obtener ID generado
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    producto.setId(rs.getLong(1));
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al insertar producto", e);
+        Long id = ejecutarInsertConId(INSERT_SQL, 
+            producto.getNombre(),
+            producto.getMarca(),
+            producto.getCategoria(),
+            producto.getPrecio(),
+            producto.getPeso(),
+            obtenerIdCodigoBarras(producto),
+            producto.getEliminado());
+        
+        if (id != null) {
+            producto.setId(id);
         }
     }
 
     @Override
     public void actualizar(Producto producto) {
-        String sql = "UPDATE producto SET nombre=?, marca=?, categoria=?, precio=?, peso=?, id_codigo_barras=? WHERE id=?";
-
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, producto.getNombre());
-            ps.setString(2, producto.getMarca());
-            ps.setString(3, producto.getCategoria());
-            ps.setDouble(4, producto.getPrecio());
-            ps.setObject(5, producto.getPeso(), Types.DOUBLE);
-            ps.setLong(6, producto.getCodigoBarras().getId());
-            ps.setLong(7, producto.getId());
-
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al actualizar producto", e);
-        }
+        ejecutarActualizacion(UPDATE_SQL,
+            producto.getNombre(),
+            producto.getMarca(),
+            producto.getCategoria(),
+            producto.getPrecio(),
+            producto.getPeso(),
+            obtenerIdCodigoBarras(producto),
+            producto.getId());
     }
 
     @Override
     public void eliminar(Long id) {
-        String sql = "UPDATE producto SET eliminado = true WHERE id = ?";
-
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, id);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al eliminar producto", e);
-        }
+        ejecutarActualizacion(DELETE_SQL, id);
     }
 
     @Override
     public Producto obtenerPorId(Long id) {
-        String sql = "SELECT p.*, c.id AS cid, c.valor, c.tipo, c.observaciones " +
-                     "FROM producto p LEFT JOIN codigo_barras c ON p.id_codigo_barras = c.id " +
-                     "WHERE p.id = ? AND p.eliminado = false";
-
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setLong(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    Producto p = new Producto();
-                    p.setId(rs.getLong("id"));
-                    p.setNombre(rs.getString("nombre"));
-                    p.setMarca(rs.getString("marca"));
-                    p.setCategoria(rs.getString("categoria"));
-                    p.setPrecio(rs.getDouble("precio"));
-                    p.setPeso(rs.getObject("peso") != null ? rs.getDouble("peso") : null);
-                    p.setEliminado(rs.getBoolean("eliminado"));
-
-                    CodigoBarras cb = new CodigoBarras();
-                    cb.setId(rs.getLong("cid"));
-                    cb.setValor(rs.getString("valor"));
-                    cb.setTipo(TipoCodigo.valueOf(rs.getString("tipo")));
-                    cb.setObservaciones(rs.getString("observaciones"));
-                    p.setCodigoBarras(cb);
-
-                    return p;
-                }
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al obtener producto", e);
-        }
-        return null;
+        return ejecutarConsultaUnica(SELECT_BASE + " AND p.id = ?", this::mapear, id);
     }
-
-
 
     @Override
     public List<Producto> listarTodos() {
-        List<Producto> productos = new ArrayList<>();
-        String sql = "SELECT p.*, c.valor, c.tipo FROM producto p " +
-                     "LEFT JOIN codigo_barras c ON p.id_codigo_barras = c.id WHERE p.eliminado = false";
-
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                Producto p = new Producto();
-                p.setId(rs.getLong("id"));
-                p.setNombre(rs.getString("nombre"));
-                p.setMarca(rs.getString("marca"));
-                p.setCategoria(rs.getString("categoria"));
-                p.setPrecio(rs.getDouble("precio"));
-                p.setPeso(rs.getObject("peso") != null ? rs.getDouble("peso") : null);
-                p.setEliminado(rs.getBoolean("eliminado"));
-
-                CodigoBarras cb = new CodigoBarras();
-                cb.setValor(rs.getString("valor"));
-                cb.setTipo(TipoCodigo.valueOf(rs.getString("tipo")));
-                p.setCodigoBarras(cb);
-
-                productos.add(p);
-            }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al listar productos", e);
-        }
-        return productos;
+        return ejecutarConsultaLista(SELECT_BASE, this::mapear);
     }
 
     @Override
     public List<Producto> buscarPorNombre(String nombre) {
-        List<Producto> productos = new ArrayList<>();
-        String sql = "SELECT p.*, c.id AS cid, c.valor, c.tipo, c.observaciones " +
-                     "FROM producto p LEFT JOIN codigo_barras c ON p.id_codigo_barras = c.id " +
-                     "WHERE p.nombre LIKE ? AND p.eliminado = false";
+        return ejecutarConsultaLista(SELECT_BASE + " AND p.nombre LIKE ?", this::mapear, "%" + nombre + "%");
+    }
 
-        try (Connection conn = ConexionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    /**
+     * Mapea un ResultSet a un objeto Producto completo (con CodigoBarras)
+     */
+    @Override
+    protected Producto mapear(ResultSet rs) throws SQLException {
+        Producto producto = new Producto();
+        
+        // Mapeo de campos del producto
+        producto.setId(rs.getLong("id"));
+        producto.setNombre(rs.getString("nombre"));
+        producto.setMarca(rs.getString("marca"));
+        producto.setCategoria(rs.getString("categoria"));
+        producto.setPrecio(rs.getDouble("precio"));
+        producto.setPeso(rs.getObject("peso") != null ? rs.getDouble("peso") : null);
+        producto.setEliminado(rs.getBoolean("eliminado"));
 
-            ps.setString(1, "%" + nombre + "%");
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Producto p = new Producto();
-                    p.setId(rs.getLong("id"));
-                    p.setNombre(rs.getString("nombre"));
-                    p.setMarca(rs.getString("marca"));
-                    p.setCategoria(rs.getString("categoria"));
-                    p.setPrecio(rs.getDouble("precio"));
-                    p.setPeso(rs.getObject("peso") != null ? rs.getDouble("peso") : null);
-                    p.setEliminado(rs.getBoolean("eliminado"));
-
-                    CodigoBarras cb = new CodigoBarras();
-                    cb.setId(rs.getLong("cid"));
-                    cb.setValor(rs.getString("valor"));
-                    cb.setTipo(TipoCodigo.valueOf(rs.getString("tipo")));
-                    cb.setObservaciones(rs.getString("observaciones"));
-                    p.setCodigoBarras(cb);
-
-                    productos.add(p);
-                }
+        // Mapeo del código de barras (si existe)
+        Long codigoBarrasId = rs.getObject("cid", Long.class);
+        if (codigoBarrasId != null && codigoBarrasId > 0) {
+            CodigoBarras codigoBarras = new CodigoBarras();
+            codigoBarras.setId(codigoBarrasId);
+            codigoBarras.setValor(rs.getString("valor"));
+            
+            String tipoStr = rs.getString("tipo");
+            if (tipoStr != null) {
+                codigoBarras.setTipo(TipoCodigo.valueOf(tipoStr));
             }
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Error al buscar productos por nombre", e);
+            
+            codigoBarras.setObservaciones(rs.getString("observaciones"));
+            producto.setCodigoBarras(codigoBarras);
         }
-        return productos;
+
+        return producto;
+    }
+
+    /**
+     * Método auxiliar para obtener el ID del código de barras de forma segura
+     */
+    private Long obtenerIdCodigoBarras(Producto producto) {
+        return (producto.getCodigoBarras() != null && producto.getCodigoBarras().getId() != null) 
+            ? producto.getCodigoBarras().getId() 
+            : null;
     }
 }
