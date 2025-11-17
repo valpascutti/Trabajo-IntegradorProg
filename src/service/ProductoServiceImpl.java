@@ -24,12 +24,8 @@ public class ProductoServiceImpl implements ProductoService {
             throw new IllegalArgumentException("El nombre del producto no puede estar vacío");
         }
 
-        if (producto.getPrecio() == null || producto.getPrecio() < 0) {
+        if (producto.getPrecio() < 0) {
             throw new IllegalArgumentException("El precio debe ser mayor o igual a cero");
-        }
-
-        if (producto.getStock() == null || producto.getStock() < 0) {
-            throw new IllegalArgumentException("El stock debe ser mayor o igual a cero");
         }
 
         producto.setEliminado(false);
@@ -60,12 +56,8 @@ public class ProductoServiceImpl implements ProductoService {
             throw new IllegalArgumentException("El nombre del producto no puede estar vacío");
         }
 
-        if (producto.getPrecio() == null || producto.getPrecio() < 0) {
+        if (producto.getPrecio() < 0) {
             throw new IllegalArgumentException("El precio debe ser mayor o igual a cero");
-        }
-
-        if (producto.getStock() == null || producto.getStock() < 0) {
-            throw new IllegalArgumentException("El stock debe ser mayor o igual a cero");
         }
 
         productoDAO.actualizar(producto);
