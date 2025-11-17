@@ -2,6 +2,7 @@ package dao;
 
 import entities.CodigoBarras;
 import entities.TipoCodigo;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -53,6 +54,44 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
     @Override
     public CodigoBarras buscarPorNumero(String numero) {
         return ejecutarConsultaUnica(SELECT_BASE + " AND valor = ?", this::mapear, numero);
+    }
+
+    // Métodos con Connection externa para transacciones
+    @Override
+    public void insertar(CodigoBarras cb, Connection conn) {
+        Long id = ejecutarInsertConId(INSERT_SQL, conn,
+            cb.getValor(), 
+            cb.getTipo().name(), 
+            cb.getObservaciones(), 
+            cb.getEliminado());
+        
+        if (id != null) {
+            cb.setId(id);
+        }
+    }
+
+    @Override
+    public CodigoBarras obtenerPorId(Long id, Connection conn) {
+        return ejecutarConsultaUnica(SELECT_BASE + " AND id = ?", conn, this::mapear, id);
+    }
+
+    @Override
+    public List<CodigoBarras> listarTodos(Connection conn) {
+        return ejecutarConsultaLista(SELECT_BASE, conn, this::mapear);
+    }
+
+    @Override
+    public void eliminar(Long id, Connection conn) {
+        ejecutarActualizacion(DELETE_SQL, conn, id);
+    }
+
+    @Override
+    public void actualizar(CodigoBarras cb, Connection conn) {
+        ejecutarActualizacion(UPDATE_SQL, conn,
+            cb.getValor(), 
+            cb.getTipo().name(), 
+            cb.getObservaciones(), 
+            cb.getId());
     }
 
     @Override

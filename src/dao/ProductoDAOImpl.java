@@ -3,6 +3,7 @@ package dao;
 import entities.Producto;
 import entities.CodigoBarras;
 import entities.TipoCodigo;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -115,5 +116,49 @@ public class ProductoDAOImpl extends BaseDAO<Producto> implements ProductoDAO {
         return (producto.getCodigoBarras() != null && producto.getCodigoBarras().getId() != null) 
             ? producto.getCodigoBarras().getId() 
             : null;
+    }
+
+    // Métodos con Connection externa para transacciones
+    @Override
+    public void insertar(Producto producto, Connection conn) {
+        Long id = ejecutarInsertConId(INSERT_SQL, conn,
+            producto.getNombre(),
+            producto.getMarca(),
+            producto.getCategoria(),
+            producto.getPrecio(),
+            producto.getPeso(),
+            obtenerIdCodigoBarras(producto),
+            producto.getEliminado());
+
+        if (id != null) {
+            producto.setId(id);
+        }
+    }
+
+    @Override
+    public Producto obtenerPorId(Long id, Connection conn) {
+        return ejecutarConsultaUnica(SELECT_BASE + " AND p.id = ?", conn, this::mapear, id);
+    }
+
+    @Override
+    public List<Producto> listarTodos(Connection conn) {
+        return ejecutarConsultaLista(SELECT_BASE, conn, this::mapear);
+    }
+
+    @Override
+    public void eliminar(Long id, Connection conn) {
+        ejecutarActualizacion(DELETE_SQL, conn, id);
+    }
+
+    @Override
+    public void actualizar(Producto producto, Connection conn) {
+        ejecutarActualizacion(UPDATE_SQL, conn,
+            producto.getNombre(),
+            producto.getMarca(),
+            producto.getCategoria(),
+            producto.getPrecio(),
+            producto.getPeso(),
+            obtenerIdCodigoBarras(producto),
+            producto.getId());
     }
 }
