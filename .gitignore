@@ -11,7 +11,3 @@ bin/
 *.temp
 Thumbs.db
 
-# Logs
-*.log
-logs/
-bin/
