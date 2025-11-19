@@ -76,6 +76,16 @@ public class Producto {
     public void setCodigoBarras(CodigoBarras codigoBarras) {
         this.codigoBarras = codigoBarras;
     }
-    
+
+    @Override
+    public String toString() {
+    return "Producto{" +
+        "id=" + id +
+        ", nombre='" + nombre + '\'' +
+        ", marca='" + marca + '\'' +
+        ", precio=" + precio +
+        ", codigoBarras=" + (codigoBarras != null ? codigoBarras.getValor() : "null") +
+        '}';
+}
 
 }
