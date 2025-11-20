@@ -6,6 +6,7 @@ import dao.ProductoDAOImpl;
 import entities.CodigoBarras;
 import entities.Producto;
 import entities.TipoCodigo;
+import java.time.LocalDate;
 
 public class CrearDatosPrueba {
     
@@ -107,10 +108,18 @@ public class CrearDatosPrueba {
                                      String codigoBarras, TipoCodigo tipo, String nombre, String marca, 
                                      String categoria, double precio, Double peso, String observaciones) {
         try {
+            // Verificar si el código ya existe
+            CodigoBarras codigoExistente = codigoDAO.buscarPorNumero(codigoBarras);
+            if (codigoExistente != null) {
+                System.out.printf("   ⚠️  Código %s ya existe, saltando %s%n", codigoBarras, nombre);
+                return;
+            }
+            
             // Crear código de barras
             CodigoBarras codigo = new CodigoBarras();
             codigo.setValor(codigoBarras);
             codigo.setTipo(tipo);
+            codigo.setFechaAsignacion(java.time.LocalDate.now()); // Agregar fecha actual
             codigo.setObservaciones(observaciones);
             codigo.setEliminado(false);
             codigoDAO.insertar(codigo);
@@ -126,10 +135,11 @@ public class CrearDatosPrueba {
             producto.setEliminado(false);
             productoDAO.insertar(producto);
             
-            System.out.printf("   %s - $%.2f%n", nombre, precio);
+            System.out.printf(" %s - $%.2f (Código: %s)%n", nombre, precio, codigoBarras);
             
         } catch (Exception e) {
-            System.err.printf("  Error al crear %s: %s%n", nombre, e.getMessage());
+            System.err.printf(" Error al crear %s: %s%n", nombre, e.getMessage());
+            e.printStackTrace(); // Para ver el stack trace completo
         }
     }
     
