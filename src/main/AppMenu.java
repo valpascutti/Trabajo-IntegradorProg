@@ -1,11 +1,12 @@
 package main;
 
-import entities.CodigoBarras;
-import entities.Producto;
-import entities.TipoCodigo;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
+
+import entities.CodigoBarras;
+import entities.Producto;
+import entities.TipoCodigo;
 import service.CodigoBarrasService;
 import service.CodigoBarrasServiceImpl;
 import service.ProductoService;
@@ -22,7 +23,7 @@ public class AppMenu {
         int opcion;
 
         do {
-            System.out.println("\n===== MENÚ PRINCIPAL =====");
+            System.out.println("\n===== MENU PRINCIPAL =====");
             System.out.println("1. Gestión de Códigos de Barras");
             System.out.println("2. Gestión de Productos");
             System.out.println("0. Salir");
