@@ -10,8 +10,8 @@ import java.util.List;
 public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements CodigoBarrasDAO {
 
     private static final String SELECT_BASE = "SELECT * FROM codigo_barras WHERE eliminado = false";
-    private static final String INSERT_SQL = "INSERT INTO codigo_barras (valor, tipo, observaciones, eliminado) VALUES (?, ?, ?, ?)";
-    private static final String UPDATE_SQL = "UPDATE codigo_barras SET valor=?, tipo=?, observaciones=? WHERE id=?";
+    private static final String INSERT_SQL = "INSERT INTO codigo_barras (valor, tipo, fecha_asignacion, observaciones, eliminado) VALUES (?, ?, ?, ?, ?)";
+    private static final String UPDATE_SQL = "UPDATE codigo_barras SET valor=?, tipo=?, fecha_asignacion=?, observaciones=? WHERE id=?";
     private static final String DELETE_SQL = "UPDATE codigo_barras SET eliminado = true WHERE id = ?";
 
     @Override
@@ -19,6 +19,7 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
         Long id = ejecutarInsertConId(INSERT_SQL, 
             cb.getValor(), 
             cb.getTipo().name(), 
+            java.sql.Date.valueOf(cb.getFechaAsignacion()),
             cb.getObservaciones(), 
             cb.getEliminado());
         
@@ -47,6 +48,7 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
         ejecutarActualizacion(UPDATE_SQL, 
             cb.getValor(), 
             cb.getTipo().name(), 
+            java.sql.Date.valueOf(cb.getFechaAsignacion()),
             cb.getObservaciones(), 
             cb.getId());
     }
@@ -62,6 +64,7 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
         Long id = ejecutarInsertConId(INSERT_SQL, conn,
             cb.getValor(), 
             cb.getTipo().name(), 
+            java.sql.Date.valueOf(cb.getFechaAsignacion()),
             cb.getObservaciones(), 
             cb.getEliminado());
         
@@ -90,6 +93,7 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
         ejecutarActualizacion(UPDATE_SQL, conn,
             cb.getValor(), 
             cb.getTipo().name(), 
+            java.sql.Date.valueOf(cb.getFechaAsignacion()),
             cb.getObservaciones(), 
             cb.getId());
     }
@@ -100,6 +104,13 @@ public class CodigoBarrasDAOImpl extends BaseDAO<CodigoBarras> implements Codigo
         cb.setId(rs.getLong("id"));
         cb.setValor(rs.getString("valor"));
         cb.setTipo(TipoCodigo.valueOf(rs.getString("tipo")));
+        
+        // Mapear fecha_asignacion
+        java.sql.Date sqlDate = rs.getDate("fecha_asignacion");
+        if (sqlDate != null) {
+            cb.setFechaAsignacion(sqlDate.toLocalDate());
+        }
+        
         cb.setObservaciones(rs.getString("observaciones"));
         cb.setEliminado(rs.getBoolean("eliminado"));
         return cb;
