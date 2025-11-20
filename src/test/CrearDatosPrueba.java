@@ -30,8 +30,7 @@ public class CrearDatosPrueba {
             mostrarResumen(productoDAO);
             
         } catch (Exception e) {
-            System.err.println("Error al crear datos de prueba:");
-            e.printStackTrace();
+            System.err.println("Error al crear datos de prueba: " + e.getMessage());
         }
     }
     
