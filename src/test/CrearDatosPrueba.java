@@ -6,7 +6,7 @@ import dao.ProductoDAOImpl;
 import entities.CodigoBarras;
 import entities.Producto;
 import entities.TipoCodigo;
-import java.time.LocalDate;
+import java.time.LocalDate; 
 
 public class CrearDatosPrueba {
     
